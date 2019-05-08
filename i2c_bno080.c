@@ -80,7 +80,8 @@ int receivePacket(void) {
    uint8_t subtransfer = 0;   // if not all data is read in one go,
                               // the header byte 2 MSB is set
 
-   int rq14, int rv14;
+   int rq14;
+   int rv14;
 // check if gpio is already exported
     if ((rq14 = gpio_is_requested(14)) < 0)
     {
@@ -102,8 +103,9 @@ int receivePacket(void) {
         perror("gpio_direction_input");
     }
 
-    while(!gpio_get_value(14))
+    while(gpio_get_value(14))
     {
+
       usleep(1);
     }
 
@@ -135,7 +137,7 @@ int receivePacket(void) {
    uint8_t data[packetlen];    // Buffer for cargo data
    usleep(1000);               // Wait 100 microsecs before next read
 
-       while(!gpio_get_value(14))
+       while(gpio_get_value(14))
     {
       usleep(1);
     }
