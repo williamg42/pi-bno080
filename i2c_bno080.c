@@ -19,6 +19,7 @@
 #include <stdint.h>
 #include <errno.h>
 #include <math.h>
+#include <ugpio/ugpio.h>
 #include "getbno080.h"
 
 uint32_t readu32(uint8_t *p) {
@@ -79,6 +80,35 @@ int receivePacket(void) {
    uint8_t subtransfer = 0;   // if not all data is read in one go,
                               // the header byte 2 MSB is set
 
+   int rq14, int rv14;
+// check if gpio is already exported
+    if ((rq14 = gpio_is_requested(14)) < 0)
+    {
+        perror("gpio_is_requested");
+        return EXIT_FAILURE;
+    }
+    // export the gpio
+    if (!rq14) {
+        printf("> exporting gpio\n");
+        if ((rv14 = gpio_request(14, NULL)) < 0)
+        {
+            perror("gpio_request");
+            return EXIT_FAILURE;
+        }
+    }
+
+    if ((rv14 = gpio_direction_input(14)) < 0)
+    {
+        perror("gpio_direction_input");
+    }
+
+    while(!gpio_get_value(14))
+    {
+      usleep(1);
+    }
+
+
+
    // 1st Read to get the 4-byte SHTP header with the cargo size
    rbytes = read(i2cfd, shtpHeader, 4);
    err = errno;
@@ -104,6 +134,11 @@ int receivePacket(void) {
 
    uint8_t data[packetlen];    // Buffer for cargo data
    usleep(1000);               // Wait 100 microsecs before next read
+
+       while(!gpio_get_value(14))
+    {
+      usleep(1);
+    }
 
    rbytes = read(i2cfd, data, packetlen);
    err = errno;
